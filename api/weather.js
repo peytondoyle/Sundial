@@ -1,54 +1,20 @@
-const apiKey = '4ebd0e591c418599d0240ab9fb5e220a'; // <- replace this with your real key
+export default async function handler(req, res) {
+  const { lat, lon } = req.query;
 
-function getSunGoodness() {
-  if (!navigator.geolocation) {
-    alert("Geolocation is not supported.");
-    return;
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+
+  if (!lat || !lon || !apiKey) {
+    return res.status(400).json({ error: "Missing parameters or API key" });
   }
 
-  navigator.geolocation.getCurrentPosition(async (position) => {
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+    );
 
-    try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-      );
-      const data = await response.json();
-
-      const clouds = data.clouds.all;        // % cloud cover
-      const humidity = data.main.humidity;   // % humidity
-      const visibility = data.visibility;    // meters
-      const sunrise = data.sys.sunrise;
-      const sunset = data.sys.sunset;
-      const now = Math.floor(Date.now() / 1000);
-
-      // Calculate score
-      let score = 100;
-      score -= clouds * 0.6;
-      score -= humidity * 0.2;
-      if (visibility < 5000) score -= 15;
-      if (Math.abs(now - sunrise) < 3600 || Math.abs(now - sunset) < 3600) {
-        score += 10;
-      }
-
-      score = Math.max(0, Math.min(100, Math.round(score)));
-
-      document.getElementById('score').textContent = `${score}%`;
-      document.getElementById('description').textContent = getVibe(score);
-    } catch (err) {
-      console.error(err);
-      document.getElementById('score').textContent = "--%";
-      document.getElementById('description').textContent = "Failed to load";
-    }
-  });
-}
-
-function getVibe(score) {
-  if (score > 90) return "Stunning skies!";
-  if (score > 75) return "Gorgeous and glowing";
-  if (score > 60) return "Pretty clear";
-  if (score > 40) return "Some clouds";
-  if (score > 20) return "Gloomy";
-  return "Moody gray";
+    const data = await response.json();
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch weather data" });
+  }
 }

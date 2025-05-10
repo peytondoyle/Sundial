@@ -11,9 +11,7 @@ function getSunGoodness() {
     const lon = position.coords.longitude;
 
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-      );
+      const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
       const data = await response.json();
 
       const clouds = data.clouds.all;        // % cloud cover
