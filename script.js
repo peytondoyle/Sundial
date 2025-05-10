@@ -12,6 +12,13 @@ function getSunGoodness() {
         const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
         const data = await response.json();
   
+        if (!data || !data.clouds || !data.main || !data.sys) {
+          console.error("Malformed or missing weather data:", data);
+          document.getElementById('score').textContent = "--%";
+          document.getElementById('description').textContent = "Invalid weather data";
+          return;
+        }
+  
         const clouds = data.clouds.all;
         const humidity = data.main.humidity;
         const visibility = data.visibility;
@@ -32,7 +39,7 @@ function getSunGoodness() {
         document.getElementById('score').textContent = `${score}%`;
         document.getElementById('description').textContent = getVibe(score);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch error:", err);
         document.getElementById('score').textContent = "--%";
         document.getElementById('description').textContent = "Failed to load";
       }
